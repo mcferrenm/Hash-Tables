@@ -93,6 +93,14 @@ void hash_table_insert(BasicHashTable *ht, char *key, char *value)
   // Create pair
   Pair *pair = create_pair(key, value);
 
+  // Check if there's already a pair at index
+  if (ht->storage[index] != NULL) {
+    
+    // Destroy current pair
+    printf("Overwriting existing value: %s", ht->storage[index]->value);
+    destroy_pair(ht->storage[index]);
+  }
+
   // Set pair to index
   ht->storage[index] = pair;
 }
