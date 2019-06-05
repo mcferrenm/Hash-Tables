@@ -87,7 +87,14 @@ BasicHashTable *create_hash_table(int capacity)
  ****/
 void hash_table_insert(BasicHashTable *ht, char *key, char *value)
 {
+  // Hash the key to get bucket index
+  int index = hash(key, ht->capacity);
 
+  // Create pair
+  Pair *pair = create_pair(key, value);
+
+  // Set pair to index
+  ht->storage[index] = pair;
 }
 
 /****
@@ -107,7 +114,21 @@ void hash_table_remove(BasicHashTable *ht, char *key)
  ****/
 char *hash_table_retrieve(BasicHashTable *ht, char *key)
 {
-  return NULL;
+  // Hash the key to get bucket index
+  int new_index = hash(key, ht->capacity);
+
+  // Check if index is not NULL
+  if (ht->storage[new_index] != NULL) {
+
+    // Check if key matches and return value
+    if (strcmp( ht->storage[new_index]->key, key) == 0) {
+      return ht->storage[new_index]->value;
+    } else {
+      return NULL;
+    }
+  } else {
+    return NULL;
+  }
 }
 
 /****
