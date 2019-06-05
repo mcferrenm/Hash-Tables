@@ -112,7 +112,15 @@ void hash_table_insert(BasicHashTable *ht, char *key, char *value)
  ****/
 void hash_table_remove(BasicHashTable *ht, char *key)
 {
+  // Hash the key to get bucket index
+  int index = hash(key, ht->capacity);
 
+  // Check if there's a pair at index
+  if (ht->storage[index] != NULL) {
+    destroy_pair(ht->storage[index]);
+  } else {
+    printf("No value at key: %s", key);
+  }
 }
 
 /****
