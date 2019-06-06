@@ -76,7 +76,7 @@ HashTable *create_hash_table(int capacity)
   HashTable *ht = malloc(capacity * sizeof(HashTable));
 
   ht->capacity = capacity;
-  ht->storage = calloc(capacity, sizeof(*LinkedPair));
+  ht->storage = calloc(capacity, sizeof(LinkedPair *));
 
   return ht;
 }
@@ -118,7 +118,29 @@ void hash_table_remove(HashTable *ht, char *key)
  */
 char *hash_table_retrieve(HashTable *ht, char *key)
 {
-  return NULL;
+  // Hash the key to get bucket index
+  unsigned int new_index = hash(key, ht->capacity);
+
+  // Check if there is a LinkedPair at new_index
+  if (ht->storage[new_index] != NULL) {
+
+    // Check if LinkedPair key matches
+    if (strcmp(ht->storage[new_index]->key, key) == 0) {
+      
+      // Return value
+      return ht->storage[new_index]->value;
+    
+    } else {
+      
+      // TODO Check if there is a next LinkedPair
+      return NULL;
+    }
+
+  } else {
+
+    // Key not found return NULL
+    return NULL;
+  }
 }
 
 /*

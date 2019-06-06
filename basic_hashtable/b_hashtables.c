@@ -141,10 +141,10 @@ char *hash_table_retrieve(BasicHashTable *ht, char *key)
   // Check if index is not NULL, key matches and return value
   if (ht->storage[new_index] != NULL && strcmp(ht->storage[index]->key, key) == 0) {
     return ht->storage[new_index]->value;
-    } else {
-      fprintf(stderr, "No value at key: %s", key);
-      return NULL;
-    }
+  } else {
+    fprintf(stderr, "No value at key: %s", key);
+    return NULL;
+  }
 }
 
 /****
