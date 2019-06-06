@@ -73,7 +73,10 @@ unsigned int hash(char *str, int max)
  */
 HashTable *create_hash_table(int capacity)
 {
-  HashTable *ht;
+  HashTable *ht = malloc(capacity * sizeof(HashTable));
+
+  ht->capacity = capacity;
+  ht->storage = calloc(capacity, sizeof(*LinkedPair));
 
   return ht;
 }
