@@ -168,24 +168,21 @@ void hash_table_remove(HashTable *ht, char *key)
 
   Return NULL if the key is not found.
  */
-char *hash_table_retrieve(HashTable *ht, char *key)
-{
-  // Hash the key to get bucket index
-  unsigned int new_index = hash(key, ht->capacity);
 
+char *get_value_from_linked_list(LinkedPair *stored_pair, char *key)
+{
   // Check if there is a LinkedPair at new_index
-  if (ht->storage[new_index] != NULL) {
+  if (stored_pair != NULL) {
 
     // Check if LinkedPair key matches
-    if (strcmp(ht->storage[new_index]->key, key) == 0) {
+    if (strcmp(stored_pair->key, key) == 0) {
       
       // Return value
-      return ht->storage[new_index]->value;
+      return stored_pair->value;
     
     } else {
-      
-      // TODO Check if there is a next LinkedPair
-      return NULL;
+      // Recursively traverse, and return value
+      return get_value_from_linked_list(stored_pair->next, key);
     }
 
   } else {
@@ -193,6 +190,18 @@ char *hash_table_retrieve(HashTable *ht, char *key)
     // Key not found return NULL
     return NULL;
   }
+}
+
+char *hash_table_retrieve(HashTable *ht, char *key)
+{
+  // Hash the key to get bucket index
+  unsigned int new_index = hash(key, ht->capacity);
+
+  // Grab reference to stored pair
+  LinkedPair *stored_pair = ht->storage[new_index];
+
+  // Recursively traverse, and return value
+  return get_value_from_linked_list(stored_pair, key);
 }
 
 /*
