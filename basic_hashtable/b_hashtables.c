@@ -95,9 +95,12 @@ void hash_table_insert(BasicHashTable *ht, char *key, char *value)
 
   // Check if there's already a pair at index
   if (ht->storage[index] != NULL) {
-    
+
+    // Check if it is the key arg
+    if (strcmp(ht->storage[index]->key, key) != 0) {
+      printf("Overwriting existing value: %s", ht->storage[index]->value);
+    }
     // Destroy current pair
-    printf("Overwriting existing value: %s", ht->storage[index]->value);
     destroy_pair(ht->storage[index]);
   }
 
@@ -116,10 +119,12 @@ void hash_table_remove(BasicHashTable *ht, char *key)
   int index = hash(key, ht->capacity);
 
   // Check if there's a pair at index
-  if (ht->storage[index] != NULL) {
+  if (ht->storage[index] != NULL && strcmp(ht->storage[index]->key, key) == 0) {
     destroy_pair(ht->storage[index]);
+    ht->storage[index] = NULL;
   } else {
-    printf("No value at key: %s", key);
+    fprintf(stderr, "No value at key: %s", key);
+    return NULL;
   }
 }
 
@@ -133,18 +138,13 @@ char *hash_table_retrieve(BasicHashTable *ht, char *key)
   // Hash the key to get bucket index
   int new_index = hash(key, ht->capacity);
 
-  // Check if index is not NULL
-  if (ht->storage[new_index] != NULL) {
-
-    // Check if key matches and return value
-    if (strcmp( ht->storage[new_index]->key, key) == 0) {
-      return ht->storage[new_index]->value;
+  // Check if index is not NULL, key matches and return value
+  if (ht->storage[new_index] != NULL && strcmp(ht->storage[index]->key, key) == 0) {
+    return ht->storage[new_index]->value;
     } else {
+      fprintf(stderr, "No value at key: %s", key);
       return NULL;
     }
-  } else {
-    return NULL;
-  }
 }
 
 /****
@@ -160,7 +160,6 @@ void destroy_hash_table(BasicHashTable *ht)
       destroy_pair(ht->storage[i])
     }
   }
-
   // Free hash table storage
   free(ht->storage);
 
