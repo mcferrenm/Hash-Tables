@@ -90,9 +90,61 @@ HashTable *create_hash_table(int capacity)
   Inserting values to the same index with existing keys can overwrite
   the value in th existing LinkedPair list.
  */
+
+void set_pair_with_new_key(LinkedPair *current_bucket, LinkedPair *new_pair)
+{
+  // Traverse to end of linked list, pair->next == NULL
+  
+  // Check if this is the tail
+  if (current_bucket->next == NULL) {
+    
+    // Set new_pair to next
+    current_bucket->next = new_pair;
+
+  // Recursively traverse, check the next LinkedPair until next == NULL
+  } else {
+    set_pair_with_new_key(current_bucket->next, new_pair);
+  }
+}
+
 void hash_table_insert(HashTable *ht, char *key, char *value)
 {
+  // Hash the key to get bucket index
+  unsigned int new_index = hash(key, ht->capacity);
 
+  // Grab reference to current bucket
+  LinkedPair *current_bucket = ht->storage[new_index];
+
+  // Create new LinkedPair
+  LinkedPair *new_pair = create_pair(key, value);
+
+  // Check if bucket is full
+  if (current_bucket != NULL) {
+
+    // Check if key is different than existing key
+    if (strcmp(current_bucket->key, key) != 0) {
+
+      // Traverse LinkedList and set new pair
+      set_pair_with_new_key(current_bucket, new_pair);
+
+    // If key is the same
+    } else {
+
+      // Overwrite with warning 
+      printf("Overwriting existing value: %s", current_bucket->value);
+
+      // Destroy current pair
+      destroy_pair(current_bucket);
+
+      // Set pair to current bucket
+      ht->storage[new_index] = new_pair;
+    }
+  // If bucket is empty
+  } else {
+
+    // set new pair
+    ht->storage[new_index] = new_pair;
+  }
 }
 
 /*

@@ -8,7 +8,7 @@ char *test_hash_table_insertion_and_retrieval()
     char *return_value = hash_table_retrieve(ht, "key-0");
     mu_assert(return_value == NULL, "Initialized value is not NULL");
 
-    // hash_table_insert(ht, "key-0", "val-0");
+    hash_table_insert(ht, "key-0", "val-0");
     // hash_table_insert(ht, "key-1", "val-1");
     // hash_table_insert(ht, "key-2", "val-2");
     // hash_table_insert(ht, "key-3", "val-3");
@@ -19,8 +19,8 @@ char *test_hash_table_insertion_and_retrieval()
     // hash_table_insert(ht, "key-8", "val-8");
     // hash_table_insert(ht, "key-9", "val-9");
 
-    // return_value = hash_table_retrieve(ht, "key-0");
-    // mu_assert(strcmp(return_value, "val-0") == 0, "Value is not stored correctly");
+    return_value = hash_table_retrieve(ht, "key-0");
+    mu_assert(strcmp(return_value, "val-0") == 0, "Value is not stored correctly");
     // return_value = hash_table_retrieve(ht, "key-1");
     // mu_assert(strcmp(return_value, "val-1") == 0, "Value is not stored correctly");
     // return_value = hash_table_retrieve(ht, "key-2");
