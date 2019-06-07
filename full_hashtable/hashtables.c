@@ -247,9 +247,38 @@ char *hash_table_retrieve(HashTable *ht, char *key)
 
   Don't forget to free any malloc'ed memory!
  */
+
+void destroy_all_linked_pairs(LinkedPair *stored_pair)
+{
+  // Check if we are at the tail
+  if (stored_pair == NULL) {
+    return;
+  } else {
+    
+    // Save reference to next pair
+    LinkedPair *next_pair = stored_pair->next;
+
+    // Destory stored pair
+    destroy_pair(stored_pair);
+
+    // Recursive call with next pair
+    destroy_all_linked_pairs(next_pair);
+  }
+}
+
 void destroy_hash_table(HashTable *ht)
 {
+  // Free all pairs (including keys and values)
+  for (int i = 0; i < ht->capacity; i++) {
+    if (ht->storage[i] != NULL) {
+      destroy_all_linked_pairs(ht->storage[i]);
+    }
+  }
+  // Free hash table storage
+  free(ht->storage);
 
+  // Free hash table
+  free(ht);
 }
 
 /*
