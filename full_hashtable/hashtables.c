@@ -155,9 +155,47 @@ void hash_table_insert(HashTable *ht, char *key, char *value)
 
   Don't forget to free any malloc'ed memory!
  */
-void hash_table_remove(HashTable *ht, char *key)
-{
 
+void remove_pair_with_key(HashTable *ht, int new_index, LinkedPair *previous_pair, LinkedPair *stored_pair, char *key)
+{
+    // Check if there is a LinkedPair
+  if (stored_pair != NULL) {
+
+    // Check if LinkedPair key matches
+    if (strcmp(stored_pair->key, key) == 0) {
+      
+      // Reassign pointers
+      if(previous_pair != NULL) {
+        previous_pair->next = stored_pair->next;
+      }
+      
+      // Remove Pair / Free Memory 
+      destroy_pair(stored_pair);
+
+      // Set removed to null
+      ht->storage[new_index] = NULL;
+    
+    } else {
+      // Recursively traverse, and return value
+      remove_pair_with_key(ht, new_index, stored_pair, stored_pair->next, key);
+    }
+    
+  } else {
+    // Key not found return NULL
+    fprintf(stderr, "No value at key: %s", key);
+  }
+}
+
+void hash_table_remove(HashTable *ht, char *key)
+{ 
+  // Hash the key to get bucket index
+  unsigned int new_index = hash(key, ht->capacity);
+
+  // Grab reference to stored pair
+  LinkedPair *stored_pair = ht->storage[new_index];
+
+  // Call recursive helper function
+  remove_pair_with_key(ht, new_index, NULL, stored_pair, key);
 }
 
 /*
