@@ -289,9 +289,38 @@ void destroy_hash_table(HashTable *ht)
 
   Don't forget to free any malloc'ed memory!
  */
+
+void copy_all_pairs_to_new_ht(HashTable *src, HashTable *dest, LinkedPair *stored_pair)
+{
+  if (stored_pair == NULL) {
+    return;
+  } else {
+
+    // Rehash old pairs and insert into new_ht
+    hash_table_insert(dest, stored_pair->key, stored_pair->value);
+
+    // Recursively call again
+    copy_all_pairs_to_new_ht(src, dest, stored_pair->next);
+  }
+}
+
 HashTable *hash_table_resize(HashTable *ht)
 {
-  HashTable *new_ht;
+  // Create new hash table with double capacity
+  HashTable *new_ht = create_hash_table(2 * ht->capacity);
+
+  // Loop through existing hash table storage
+  for (int i = 0; i < ht->capacity; i++) {
+    if (ht->storage[i] != NULL) {
+
+      // Helper function to traverse linked list and copy pairs
+      copy_all_pairs_to_new_ht(ht, new_ht, ht->storage[i]);
+    }
+  }
+  
+  // Free old storage and ht
+  free(ht->storage);
+  free(ht);
 
   return new_ht;
 }
