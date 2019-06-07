@@ -73,7 +73,10 @@ unsigned int hash(char *str, int max)
  */
 HashTable *create_hash_table(int capacity)
 {
-  HashTable *ht;
+  HashTable *ht = malloc(capacity * sizeof(HashTable));
+
+  ht->capacity = capacity;
+  ht->storage = calloc(capacity, sizeof(LinkedPair *));
 
   return ht;
 }
@@ -87,9 +90,61 @@ HashTable *create_hash_table(int capacity)
   Inserting values to the same index with existing keys can overwrite
   the value in th existing LinkedPair list.
  */
+
+void set_pair_with_new_key(LinkedPair *stored_pair, LinkedPair *new_pair)
+{
+  // Traverse to end of linked list, pair->next == NULL
+  
+  // Check if this is the tail
+  if (stored_pair->next == NULL) {
+    
+    // Set new_pair to next
+    stored_pair->next = new_pair;
+
+  // Recursively traverse, check the next LinkedPair until next == NULL
+  } else {
+    set_pair_with_new_key(stored_pair->next, new_pair);
+  }
+}
+
 void hash_table_insert(HashTable *ht, char *key, char *value)
 {
+  // Hash the key to get bucket index
+  unsigned int new_index = hash(key, ht->capacity);
 
+  // Grab reference to stored pair
+  LinkedPair *stored_pair = ht->storage[new_index];
+
+  // Create new LinkedPair
+  LinkedPair *new_pair = create_pair(key, value);
+
+  // Check if bucket is full
+  if (stored_pair != NULL) {
+
+    // Check if key is different than existing key
+    if (strcmp(stored_pair->key, key) != 0) {
+
+      // Traverse LinkedList and set new pair
+      set_pair_with_new_key(stored_pair, new_pair);
+
+    // If key is the same
+    } else {
+
+      // Overwrite with warning 
+      printf("Overwriting existing value: %s", stored_pair->value);
+
+      // Destroy current pair
+      destroy_pair(stored_pair);
+
+      // Set pair to stored pair
+      ht->storage[new_index] = new_pair;
+    }
+  // If bucket is empty
+  } else {
+
+    // set new pair
+    ht->storage[new_index] = new_pair;
+  }
 }
 
 /*
@@ -100,9 +155,47 @@ void hash_table_insert(HashTable *ht, char *key, char *value)
 
   Don't forget to free any malloc'ed memory!
  */
-void hash_table_remove(HashTable *ht, char *key)
-{
 
+void remove_pair_with_key(HashTable *ht, int new_index, LinkedPair *previous_pair, LinkedPair *stored_pair, char *key)
+{
+    // Check if there is a LinkedPair
+  if (stored_pair != NULL) {
+
+    // Check if LinkedPair key matches
+    if (strcmp(stored_pair->key, key) == 0) {
+      
+      // Reassign pointers
+      if(previous_pair != NULL) {
+        previous_pair->next = stored_pair->next;
+      }
+      
+      // Remove Pair / Free Memory 
+      destroy_pair(stored_pair);
+
+      // Set removed to null
+      ht->storage[new_index] = NULL;
+    
+    } else {
+      // Recursively traverse, and return value
+      remove_pair_with_key(ht, new_index, stored_pair, stored_pair->next, key);
+    }
+    
+  } else {
+    // Key not found return NULL
+    fprintf(stderr, "No value at key: %s", key);
+  }
+}
+
+void hash_table_remove(HashTable *ht, char *key)
+{ 
+  // Hash the key to get bucket index
+  unsigned int new_index = hash(key, ht->capacity);
+
+  // Grab reference to stored pair
+  LinkedPair *stored_pair = ht->storage[new_index];
+
+  // Call recursive helper function
+  remove_pair_with_key(ht, new_index, NULL, stored_pair, key);
 }
 
 /*
@@ -113,9 +206,40 @@ void hash_table_remove(HashTable *ht, char *key)
 
   Return NULL if the key is not found.
  */
+
+char *get_value_from_linked_list(LinkedPair *stored_pair, char *key)
+{
+  // Check if there is a LinkedPair at new_index
+  if (stored_pair != NULL) {
+
+    // Check if LinkedPair key matches
+    if (strcmp(stored_pair->key, key) == 0) {
+      
+      // Return value
+      return stored_pair->value;
+    
+    } else {
+      // Recursively traverse, and return value
+      return get_value_from_linked_list(stored_pair->next, key);
+    }
+
+  } else {
+
+    // Key not found return NULL
+    return NULL;
+  }
+}
+
 char *hash_table_retrieve(HashTable *ht, char *key)
 {
-  return NULL;
+  // Hash the key to get bucket index
+  unsigned int new_index = hash(key, ht->capacity);
+
+  // Grab reference to stored pair
+  LinkedPair *stored_pair = ht->storage[new_index];
+
+  // Recursively traverse, and return value
+  return get_value_from_linked_list(stored_pair, key);
 }
 
 /*
@@ -123,9 +247,38 @@ char *hash_table_retrieve(HashTable *ht, char *key)
 
   Don't forget to free any malloc'ed memory!
  */
+
+void destroy_all_linked_pairs(LinkedPair *stored_pair)
+{
+  // Check if we are at the tail
+  if (stored_pair == NULL) {
+    return;
+  } else {
+    
+    // Save reference to next pair
+    LinkedPair *next_pair = stored_pair->next;
+
+    // Destory stored pair
+    destroy_pair(stored_pair);
+
+    // Recursive call with next pair
+    destroy_all_linked_pairs(next_pair);
+  }
+}
+
 void destroy_hash_table(HashTable *ht)
 {
+  // Free all pairs (including keys and values)
+  for (int i = 0; i < ht->capacity; i++) {
+    if (ht->storage[i] != NULL) {
+      destroy_all_linked_pairs(ht->storage[i]);
+    }
+  }
+  // Free hash table storage
+  free(ht->storage);
 
+  // Free hash table
+  free(ht);
 }
 
 /*
@@ -136,9 +289,38 @@ void destroy_hash_table(HashTable *ht)
 
   Don't forget to free any malloc'ed memory!
  */
+
+void copy_all_pairs_to_new_ht(HashTable *src, HashTable *dest, LinkedPair *stored_pair)
+{
+  if (stored_pair == NULL) {
+    return;
+  } else {
+
+    // Rehash old pairs and insert into new_ht
+    hash_table_insert(dest, stored_pair->key, stored_pair->value);
+
+    // Recursively call again
+    copy_all_pairs_to_new_ht(src, dest, stored_pair->next);
+  }
+}
+
 HashTable *hash_table_resize(HashTable *ht)
 {
-  HashTable *new_ht;
+  // Create new hash table with double capacity
+  HashTable *new_ht = create_hash_table(2 * ht->capacity);
+
+  // Loop through existing hash table storage
+  for (int i = 0; i < ht->capacity; i++) {
+    if (ht->storage[i] != NULL) {
+
+      // Helper function to traverse linked list and copy pairs
+      copy_all_pairs_to_new_ht(ht, new_ht, ht->storage[i]);
+    }
+  }
+  
+  // Free old storage and ht
+  free(ht->storage);
+  free(ht);
 
   return new_ht;
 }
